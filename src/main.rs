@@ -1,6 +1,10 @@
-use axum::{routing::get, Router};
+use axum::{http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
+
+// NEW
+mod types;
+use types::Person;
 
 #[tokio::main]
 async fn main() {
@@ -8,6 +12,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
+
+        // NEW
+        .route("/people", get(get_people))
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -21,5 +28,27 @@ async fn main() {
 
 async fn root() -> &'static str {
     "Hello, World!"
+}
 
+// NEW
+async fn get_people() -> impl IntoResponse {
+    let people = vec![
+        Person {
+            name: String::from("Person A"),
+            age: 36,
+            favourite_food: Some(String::from("Pizza")),
+        },
+        Person {
+            name: String::from("Person B"),
+            age: 5,
+            favourite_food: Some(String::from("Broccoli")),
+        },
+        Person {
+            name: String::from("Person C"),
+            age: 100,
+            favourite_food: None,
+        },
+    ];
+
+    (StatusCode::OK, Json(people))
 }
